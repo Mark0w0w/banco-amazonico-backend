@@ -4,6 +4,7 @@ name: CI backend
 
 on:
   pull_request:
+  workflow_dispatch: # botón "Run workflow" en la pestaña Actions
   push:
     branches: [main, develop]
 
