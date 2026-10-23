@@ -23,7 +23,7 @@ Léelo antes de empezar.
 (la ballena en la barra de tareas) y VS Code.
 
 ```powershell
-git clone https://github.com/USUARIO/banco-amazonico-backend.git
+git clone https://github.com/Mark0w0w/banco-amazonico-backend.git
 cd banco-amazonico-backend
 git checkout develop
 
