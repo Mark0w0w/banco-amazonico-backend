@@ -1,0 +1,73 @@
+# Puerta de calidad: corre en cada pull request y en cada push a develop/main.
+# Si un paso falla, el PR no se puede fusionar (protección de ramas).
+name: CI backend
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  calidad:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: banco
+          POSTGRES_PASSWORD: banco_ci
+          POSTGRES_DB: banco
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U banco" --health-interval 5s
+          --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 3s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://banco:banco_ci@localhost:5432/banco
+      DATABASE_URL_TEST: postgresql+asyncpg://banco:banco_ci@localhost:5432/banco
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRETO: secreto-solo-para-ci
+      LLM_PROVEEDOR: falso
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+
+      - name: Estilo y errores (ruff)
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Seguridad del código (bandit)
+        run: bandit -q -r app -ll
+
+      - name: Dependencias vulnerables (pip-audit)
+        run: pip-audit -r requirements.txt
+
+      - name: Migraciones aplican desde cero (alembic)
+        run: alembic upgrade head
+
+      - name: Pruebas y cobertura (pytest ≥ 80 %)
+        run: pytest --cov --cov-report=term --cov-report=xml
+
+      - name: Guardar reporte de cobertura (evidencia)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: coverage.xml

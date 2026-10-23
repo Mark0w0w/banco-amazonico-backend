@@ -1,0 +1,29 @@
+# Secretos — NUNCA suben a GitHub
+.env
+.env.*
+!.env.example
+
+# Entorno virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Cobertura y reportes
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+reportes/
+
+# Editor y sistema
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,11 @@
+# Dependencias de la aplicación (versiones fijas: todos instalan exactamente lo mismo)
+fastapi==0.161.1
+uvicorn[standard]==0.54.0
+pydantic==2.14.1
+pydantic-settings==2.16.1
+SQLAlchemy[asyncio]==2.1.6
+asyncpg==0.32.0
+alembic==1.20.1
+redis==8.1.0
+httpx==0.28.1
+sse-starlette==3.5.0

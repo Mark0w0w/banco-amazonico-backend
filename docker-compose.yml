@@ -1,0 +1,57 @@
+# Entorno de desarrollo completo:  docker compose up --build
+#   API:      http://localhost:8000/docs
+#   Postgres: localhost:5433  (usuario banco / clave banco_local)
+#   Redis:    localhost:6379
+# Ollama NO va aquí: corre instalado en la laptop con GPU (ver README).
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: banco
+      POSTGRES_PASSWORD: banco_local
+      POSTGRES_DB: banco
+    ports:
+      - "5433:5432" # 5433 afuera para no chocar con un PostgreSQL instalado en Windows
+    volumes:
+      - db_datos:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U banco -d banco"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      args:
+        INSTALAR_DEV: "true"
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app # el código de tu laptop se ve adentro: guardas y --reload reinicia solo
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # para llegar a Ollama en la laptop
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  db_datos:

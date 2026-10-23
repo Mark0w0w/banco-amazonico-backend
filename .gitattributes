@@ -1,0 +1,6 @@
+# Finales de línea LF en el repo (evita que Windows rompa los scripts dentro de Docker)
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+*.pdf binary
